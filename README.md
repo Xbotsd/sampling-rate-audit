@@ -1,5 +1,7 @@
 # sampling-rate-audit
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23679114.svg)](https://doi.org/10.5281/zenodo.23679114)
+
 How much of a feature is measuring the signal, and how much is measuring the
 sampling rate?
 
