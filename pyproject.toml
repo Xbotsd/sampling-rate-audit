@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sampling-rate-audit"
+version = "0.1.0"
+description = "Measure how much of a signal feature is really the sampling rate"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Yudong Xu", email = "3468858545@qq.com" }]
+keywords = ["sampling rate", "feature leakage", "measurement validity", "reproducibility"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = ["numpy>=1.20"]
+
+[project.urls]
+Homepage = "https://github.com/Xbotsd/sampling-rate-audit"
+
+[project.scripts]
+leakage-audit = "leakage_audit.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

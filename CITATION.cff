@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the article below."
+title: "sampling-rate-audit"
+version: 0.1.0
+date-released: 2026-10-27
+license: MIT
+repository-code: https://github.com/Xbotsd/sampling-rate-audit
+authors:
+  - family-names: Xu
+    given-names: Yudong
+    email: 3468858545@qq.com
+    affiliation: "School of Mechanical Engineering, Heilongjiang University of Science and Technology"
+preferred-citation:
+  type: article
+  title: "Sampling Rate as an Influence Quantity: Invariance Orders and a Definition-Level Audit of Physiological Feature Sets"
+  authors:
+    - family-names: Xu
+      given-names: Yudong
+  year: 2026
+  note: "Manuscript under review."
