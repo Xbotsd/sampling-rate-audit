@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite the article below."
 title: "sampling-rate-audit"
-version: 0.1.0
+version: 0.2.0
 doi: 10.5281/zenodo.23679114
 date-released: 2026-10-27
 license: MIT
@@ -13,9 +13,13 @@ authors:
     affiliation: "School of Mechanical Engineering, Heilongjiang University of Science and Technology"
 preferred-citation:
   type: article
-  title: "Sampling Rate as an Influence Quantity: Invariance Orders and a Definition-Level Audit of Physiological Feature Sets"
+  title: "Sampling Rate as an Influence Quantity: A Paired Audit of Sampled-Signal Feature Definitions"
   authors:
     - family-names: Xu
       given-names: Yudong
+    - family-names: Han
+      given-names: Linqi
+    - family-names: Song
+      given-names: Changyu
   year: 2026
-  note: "Manuscript under review."
+  note: "Substantially revised manuscript; finite-range empirical sensitivity, not universal invariance orders."

@@ -6,35 +6,57 @@ How much of a feature is measuring the signal, and how much is measuring the
 sampling rate?
 
 Given a signal and a sampling rate, this package computes, for eighteen
-standard feature definitions, the **relative bias** that a change of sampling
-rate produces, the **effect size** of that change, and the **invariance order**
-predicted from the definition alone.
+standard feature definitions, the **paired relative deviation** and descriptive
+separation/effect-size summaries produced by a change of digital grid. Its
+signature labels are heuristic structural warnings, not universal invariance
+orders or formal proofs.
 
 It is the reference implementation accompanying
 
-> Xu, Y. *Sampling Rate as an Influence Quantity: Invariance Orders and a
-> Definition-Level Audit of Physiological Feature Sets* (under review).
+> Xu, Y., Han, L., and Song, C. *Sampling Rate as an Influence Quantity: A
+> Paired Audit of Sampled-Signal Feature Definitions* (substantially revised).
+
+---
+
+## Invariance agent (new)
+
+`invariance-agent` wraps the audit into a guided assistant for first-time users
+and for programmatic use: it profiles your acquisition settings, plans the
+structural class of a feature from its formula, measures the paired deviation on
+your own record, and tells you what grid your tolerance needs — or that no grid
+will help.
+
+```bash
+invariance-agent wizard                                            # guided first run
+invariance-agent plan   --expr "zero crossings divided by len(x)"   # class from the formula
+invariance-agent full   --npy rec.npy --fs 500 --band 40 --json     # plan + audit + advice
+```
+
+It deliberately refuses to print a universal minimum sampling rate, and every
+response states that only the digital-grid component is isolated. See
+**[AGENT.md](AGENT.md)** for the contract, the verdict table and the integration
+API.
 
 ---
 
 ## Why
 
-A feature computed from a sampled signal is a measurement result, and the
-sampling rate is an **influence quantity**: it is not the measurand, but it
-changes the value. For one whole family of features — anything normalised by
-the number of samples — the change is a constant factor that no amount of
-oversampling removes. For another family it decays as $r^{-2}$, where
-$r = f_s / B$ is the sampling rate over the content bandwidth.
+Within a declared numerical measurement model, sampling rate can be treated as
+an **influence quantity** when changing the digital grid changes the computed
+feature while the source record is held fixed. Sample-count normalisers,
+difference/crossing estimators and bin-count normalisers show different
+finite-range responses. Their magnitude and slope depend on the signal,
+implementation, anchor, bandwidth convention and fitted range.
 
 This package tells you which family a feature is in, and how large the error is
 on your data.
 
-| order | signature | what happens when $f_s$ changes |
+| signature | expected mechanism | required interpretation |
 |---|---|---|
-| 1 | count or division by the sample count | value scales by the rate ratio; **no $f_s$ repairs it** |
-| 2 | first differences, crossings, path length | bias decays as $r^{-2}$; safe above $r \approx 10$ |
-| ~0.45 | divided by $\log$ of the number of FFT bins | decays only logarithmically; definitional |
-| ∞ | algebraic function of sample values | invariant to machine precision |
+| count or division by sample count | physical scale moves with the grid | redefine in physical units or audit explicitly |
+| differences/crossings | often near-quadratic error under smoothness assumptions | fit the actual paired-error curve; no universal safe ratio |
+| division by $\log$ FFT-bin count | slowly varying bin normaliser | do not assign a fixed asymptotic power |
+| value-only control | no explicit sample-count scale | near-invariance is empirical, not guaranteed |
 
 ## Install
 
@@ -80,9 +102,10 @@ Each cell is `AUC / d`: the probability that a classifier separates the
 down-sampled from the reference representation, and the standardised shift of
 the feature value.
 
-`order` is read off the definition; `fitted p` is measured from the bias. **When
-the two disagree, the implementation and the definition are not the same
-thing** — which is usually what you want to know first.
+`order` is retained as legacy output metadata for broad structural classes;
+it must not be interpreted as a universal theorem. `fitted p` is a finite-range
+slope measured from the paired relative deviation. **When labels and fitted
+slopes disagree, inspect the implementation, anchor, signal and fit range**.
 
 ## Command line
 

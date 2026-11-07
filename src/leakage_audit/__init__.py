@@ -304,7 +304,9 @@ class AuditResult:
             for r in self.rows:
                 if r["feature"] != f:
                     continue
-                y = r.get("rel_bias", abs(r["auc"] - 0.5))
+                # dict.get evaluates its default eagerly, so pick explicitly:
+                # single-record rows carry rel_bias, multi-record rows carry auc.
+                y = r["rel_bias"] if "rel_bias" in r else abs(r["auc"] - 0.5)
                 if np.isfinite(y) and y > 1e-5:
                     pts.append((r["r"], y))
             if len(pts) < 3:

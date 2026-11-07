@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sampling-rate-audit"
-version = "0.1.0"
+version = "0.2.0"
 description = "Measure how much of a signal feature is really the sampling rate"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -24,6 +24,7 @@ Homepage = "https://github.com/Xbotsd/sampling-rate-audit"
 
 [project.scripts]
 leakage-audit = "leakage_audit.cli:main"
+invariance-agent = "leakage_audit.agent_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
