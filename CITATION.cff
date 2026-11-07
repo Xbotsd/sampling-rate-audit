@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite the article below."
 title: "sampling-rate-audit"
-version: 0.2.0
+version: 0.1.2
 doi: 10.5281/zenodo.23679114
 date-released: 2026-10-27
 license: MIT
