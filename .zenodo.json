@@ -5,6 +5,7 @@
   "access_right": "open",
   "license": "MIT",
   "language": "eng",
+  "version": "0.2.0",
   "creators": [
     {
       "name": "Xu, Yudong",
@@ -26,6 +27,12 @@
       "identifier": "10.5281/zenodo.23679114",
       "resource_type": "publication-preprint",
       "scheme": "doi"
+    },
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/Xbotsd/sampling-rate-audit",
+      "resource_type": "software",
+      "scheme": "url"
     }
   ]
 }
