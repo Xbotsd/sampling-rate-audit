@@ -24,9 +24,9 @@ It is the reference implementation accompanying
   file, the old title, and claims (asymptotic invariance orders, `r >= 10`,
   "strict lower bound") that the manuscript has since withdrawn. It is
   superseded by the version under review.
-- The package reproduces the audit engine and its examples. It does not yet
-  reproduce every table and figure of the manuscript; the per-record results
-  are being deposited as part of the archival release.
+- The package reproduces the audit engine and its examples. The per-record results
+  behind every table and figure are in the archival deposit (a second file in the
+  same record), not in this git tree.
 
 ---
 
