@@ -18,8 +18,8 @@ It is the reference implementation accompanying
 
 - Version 0.1.2, tag `v0.1.2`. The accompanying manuscript is under review.
 - **This repository has no software DOI yet.** A DOI is minted on the first
-  GitHub release, and `.zenodo.json` is already in place for that. Do not cite
-  the DOI below as a software archive.
+  GitHub release, and `.zenodo.json` is already in place for that; until it
+  exists, cite the article rather than the preprint DOI.
 - `10.5281/zenodo.23679114` is an **earlier preprint**, not this code: one
   file, the old title, and claims (asymptotic invariance orders, `r >= 10`,
   "strict lower bound") that the manuscript has since withdrawn. It is
