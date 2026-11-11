@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sampling-rate-audit"
-version = "0.1.2"
+version = "0.2.0"
 description = "Measure how much of a signal feature is really the sampling rate"
 readme = "README.md"
 requires-python = ">=3.9"
