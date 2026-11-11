@@ -1,5 +1,7 @@
 # sampling-rate-audit
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24123020.svg)](https://doi.org/10.5281/zenodo.24123020)
+
 How much of a feature is measuring the signal, and how much is measuring the
 sampling rate?
 
@@ -16,17 +18,16 @@ It is the reference implementation accompanying
 
 ## Status and provenance
 
-- Version 0.1.2, tag `v0.1.2`. The accompanying manuscript is under review.
-- **This repository has no software DOI yet.** A DOI is minted on the first
-  GitHub release, and `.zenodo.json` is already in place for that; until it
-  exists, cite the article rather than the preprint DOI.
+- Version 0.2.0, tag `v0.2.0`. The accompanying manuscript is under review.
+- **Archived on Zenodo: [10.5281/zenodo.24123020](https://doi.org/10.5281/zenodo.24123020)**
+  (software, MIT). That record carries two files: this package, and the per-record
+  feature values, fit outputs and figures behind every table and figure of the
+  manuscript. Cite the DOI for the code; cite the article for the science.
 - `10.5281/zenodo.23679114` is an **earlier preprint**, not this code: one
   file, the old title, and claims (asymptotic invariance orders, `r >= 10`,
   "strict lower bound") that the manuscript has since withdrawn. It is
   superseded by the version under review.
-- The package reproduces the audit engine and its examples. The per-record results
-  behind every table and figure are in the archival deposit (a second file in the
-  same record), not in this git tree.
+- The per-record results are in the archival deposit, not in this git tree.
 
 ---
 
