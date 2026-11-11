@@ -1,6 +1,6 @@
 # sampling-rate-audit
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24123020.svg)](https://doi.org/10.5281/zenodo.24123020)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24123020.svg)](https://doi.org/10.5281/zenodo.24123020) [![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/Xbotsd/badge.svg)](https://hub.xerj.org/contributors/Xbotsd)
 
 How much of a feature is measuring the signal, and how much is measuring the
 sampling rate?
