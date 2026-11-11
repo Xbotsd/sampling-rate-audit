@@ -1,7 +1,5 @@
 # sampling-rate-audit
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23679114.svg)](https://doi.org/10.5281/zenodo.23679114)
-
 How much of a feature is measuring the signal, and how much is measuring the
 sampling rate?
 
@@ -15,6 +13,20 @@ It is the reference implementation accompanying
 
 > Xu, Y., Han, L., and Song, C. *Sampling Rate as an Influence Quantity: A
 > Paired Audit of Sampled-Signal Feature Definitions* (substantially revised).
+
+## Status and provenance
+
+- Version 0.1.2, tag `v0.1.2`. The accompanying manuscript is under review.
+- **This repository has no software DOI yet.** A DOI is minted on the first
+  GitHub release, and `.zenodo.json` is already in place for that. Do not cite
+  the DOI below as a software archive.
+- `10.5281/zenodo.23679114` is an **earlier preprint**, not this code: one
+  file, the old title, and claims (asymptotic invariance orders, `r >= 10`,
+  "strict lower bound") that the manuscript has since withdrawn. It is
+  superseded by the version under review.
+- The package reproduces the audit engine and its examples. It does not yet
+  reproduce every table and figure of the manuscript; the per-record results
+  are being deposited as part of the archival release.
 
 ---
 
@@ -142,11 +154,20 @@ DFA $\alpha_1$, sample entropy, normalised spectral entropy, zero-crossing and
 turning-point rates in both per-sample and per-second forms, spectral centroid,
 band-power ratio, standard deviation, skewness and kurtosis.
 
+That is **18 registered definitions**. The accompanying manuscript audits
+**16** of them, because the per-sample and per-second forms of a rate are one
+definition counted twice here. The implementation distinguishes five
+signatures (`PER_SAMPLE`, `N_IN_FORMULA`, `DIFF_COUNT`, `LOGBIN_NORM`,
+`VALUE_ONLY`); the manuscript groups the first two into a single
+**sample-indexed** class, which is why it reports four structural response
+classes.
+
 ## Things to know before trusting the numbers
 
 - **It measures resampling, not hardware.** Analog front ends, anti-alias
-  filters and clock jitter are absent, and they can only add error. Every
-  number is a lower bound.
+  filters, quantisation and clock jitter are absent. They can reinforce or
+  partially offset the grid component, so the audit isolates one component and
+  is **neither an upper nor a lower bound** on the device-level discrepancy.
 - **One signal gives bias, not AUC.** AUC needs several records; with a single
   record use `run()` and read the relative bias.
 - **`--band` is a declaration, not a measurement.** A smaller $B$ flatters the
