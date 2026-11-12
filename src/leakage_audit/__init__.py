@@ -32,7 +32,7 @@ The invariance order is assigned from a five-bit signature:
 
 from __future__ import annotations
 
-__version__ = "0.2.0"
+__version__ = "1.0.0"
 
 import csv
 import json
@@ -211,8 +211,10 @@ REGISTRY = {
     "turning_per_second": (f_turn_second, "DIFF_COUNT", "-"),
     "hjorth_mobility_Hz": (f_hjorth_mob_hz, "DIFF_COUNT", "Hjorth 1970"),
     "hjorth_complexity": (f_hjorth_complexity, "DIFF_COUNT", "Hjorth 1970"),
-    "petrosian_fd": (f_petrosian, "N_IN_FORMULA", "Petrosian 1995"),
-    "katz_fd": (f_katz, "N_IN_FORMULA", "Katz 1988"),
+    # Katz and Petrosian enter N through a logarithm, not as a linear scale:
+    # their deficit decays like 1/log n, so they are log-normalised, not order 1.
+    "petrosian_fd": (f_petrosian, "LOGBIN_NORM", "Petrosian 1995"),
+    "katz_fd": (f_katz, "LOGBIN_NORM", "Katz 1988"),
     "higuchi_fd": (f_higuchi, "PER_SAMPLE", "Higuchi 1988"),
     "dfa_alpha1": (f_dfa, "N_IN_FORMULA", "Peng 1995"),
     "sample_entropy": (f_sample_entropy, "N_IN_FORMULA", "Richman 2000"),
