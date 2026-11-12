@@ -1,4 +1,4 @@
-"""leakage_audit — sampling-rate leakage audit for feature definitions.
+"""leakage_audit 鈥?sampling-rate leakage audit for feature definitions.
 
 Minimal, numpy-only engine that answers one question:
 
@@ -29,7 +29,10 @@ the fitted exponent; multi-signal mode adds AUC and the effect size d.
 The invariance order is assigned from a five-bit signature:
     PER_SAMPLE | N_IN_FORMULA | LOGBIN_NORM | DIFF_COUNT | VALUE_ONLY
 """
+
 from __future__ import annotations
+
+__version__ = "0.2.0"
 
 import csv
 import json

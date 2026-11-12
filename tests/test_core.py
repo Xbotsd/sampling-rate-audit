@@ -98,3 +98,28 @@ if __name__ == "__main__":
             print("ok", name)
     print("bias exponents:", {f: round(bias_exponent(f), 2)
                               for f in ["turning_per_sample", "hjorth_mobility_Hz", "std"]})
+
+
+def test_version_matches_pyproject():
+    """The package version and the packaging metadata must not drift apart."""
+    import re
+    from pathlib import Path
+
+    import leakage_audit
+
+    text = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(encoding="utf-8")
+    found = re.search(r'(?m)^version\s*=\s*"([^"]+)"', text)
+    assert found, "version field missing from pyproject.toml"
+    assert leakage_audit.__version__ == found.group(1), (
+        "leakage_audit.__version__ is %r but pyproject.toml says %r"
+        % (leakage_audit.__version__, found.group(1))
+    )
+
+
+def test_cli_entry_points_importable():
+    """Both console-script targets must expose a callable main()."""
+    import leakage_audit.agent_cli as agent_cli
+    import leakage_audit.cli as cli
+
+    assert callable(cli.main)
+    assert callable(agent_cli.main)
