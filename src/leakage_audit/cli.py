@@ -6,7 +6,7 @@ import sys
 
 import numpy as np
 
-from . import Audit, REGISTRY, ORDER_OF, EPS, resample_fft
+from . import Audit, REGISTRY, ORDER_OF, EPS, __version__, resample_fft
 
 # --------------------------------------------------------------------------
 # CLI
@@ -62,6 +62,7 @@ def main():
     ap.add_argument("--rates", type=float, nargs="*", default=None)
     ap.add_argument("--out", default=None, help="output directory")
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--version", action="version", version="leakage-audit %s" % __version__)
     a = ap.parse_args()
 
     if a.selftest:
