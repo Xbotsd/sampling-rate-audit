@@ -1,6 +1,6 @@
 # sampling-rate-audit
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24123020.svg)](https://doi.org/10.5281/zenodo.24123020) [![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/Xbotsd/badge.svg)](https://hub.xerj.org/contributors/Xbotsd)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24153259.svg)](https://doi.org/10.5281/zenodo.24153259) [![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/Xbotsd/badge.svg)](https://hub.xerj.org/contributors/Xbotsd)
 
 How much of a feature is measuring the signal, and how much is measuring the
 sampling rate?
@@ -18,8 +18,9 @@ It is the reference implementation accompanying
 
 ## Status and provenance
 
-- Version 1.0.0. The accompanying manuscript is under review.
-- **Archived on Zenodo: [10.5281/zenodo.24123020](https://doi.org/10.5281/zenodo.24123020)**
+- Version 1.0.0. Archived on Zenodo as doi:10.5281/zenodo.24153259 (concept doi:10.5281/zenodo.24123019).
+  The accompanying manuscript is under review.
+- **Archived on Zenodo: [10.5281/zenodo.24153259](https://doi.org/10.5281/zenodo.24153259)**
   (software, MIT). That record carries two files: this package, and the per-record
   feature values, fit outputs and figures behind every table and figure of the
   manuscript. Cite the DOI for the code; cite the article for the science.
