@@ -1,4 +1,4 @@
-"""leakage_audit 鈥?sampling-rate leakage audit for feature definitions.
+"""leakage_audit — sampling-rate leakage audit for feature definitions.
 
 Minimal, numpy-only engine that answers one question:
 
