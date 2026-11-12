@@ -1,3 +1,12 @@
+## What's new in v1.0.1
+
+Citation metadata only; there is no code change.
+
+- `CITATION.cff` cites the concept DOI `10.5281/zenodo.24123019`, which always resolves to the latest
+  archived version. Version 1.0.0 shipped a `CITATION.cff` naming the previous version's DOI, because
+  the package was built before its own release existed. That cannot be fixed in place: a published
+  Zenodo record accepts metadata edits but not file replacements.
+
 ## What's new in v1.0.0
 
 Third generation of the theory: the invariance order is defined on the deficit from the

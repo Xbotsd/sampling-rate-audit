@@ -18,7 +18,8 @@ It is the reference implementation accompanying
 
 ## Status and provenance
 
-- Version 1.0.0. Archived on Zenodo as doi:10.5281/zenodo.24153259 (concept doi:10.5281/zenodo.24123019).
+- Version 1.0.1. Archived on Zenodo under concept doi:10.5281/zenodo.24123019, which always
+  resolves to the latest archived version.
   The accompanying manuscript is under review.
 - **Archived on Zenodo: [10.5281/zenodo.24153259](https://doi.org/10.5281/zenodo.24153259)**
   (software, MIT). That record carries two files: this package, and the per-record

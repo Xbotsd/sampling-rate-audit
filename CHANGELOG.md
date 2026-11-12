@@ -4,6 +4,19 @@ All notable changes to `sampling-rate-audit` are recorded here. The format follo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] — 2026-11-12
+
+### Fixed
+
+- `CITATION.cff` now cites the **concept DOI** `10.5281/zenodo.24123019` instead of a single version
+  DOI. A version DOI written into a package that predates its own release always points one version
+  back; the concept DOI always resolves to the latest archived version, so the file cannot go stale.
+
+### Notes
+
+- No code change: the engine, the registry and the command line are identical to 1.0.0. The only
+  difference is the citation metadata inside the package.
+
 ## [1.0.0] — 2026-11-12
 
 Third generation of the theory. The invariance order is now defined on the deficit from the
