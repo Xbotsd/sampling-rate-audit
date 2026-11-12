@@ -18,7 +18,7 @@ It is the reference implementation accompanying
 
 ## Status and provenance
 
-- Version 0.2.0, tag `v0.2.0`. The accompanying manuscript is under review.
+- Version 1.0.0. The accompanying manuscript is under review.
 - **Archived on Zenodo: [10.5281/zenodo.24123020](https://doi.org/10.5281/zenodo.24123020)**
   (software, MIT). That record carries two files: this package, and the per-record
   feature values, fit outputs and figures behind every table and figure of the
@@ -28,6 +28,15 @@ It is the reference implementation accompanying
   "strict lower bound") that the manuscript has since withdrawn. It is
   superseded by the version under review.
 - The per-record results are in the archival deposit, not in this git tree.
+
+### Versioning
+
+From 1.0.0 the public surface — `Audit`, `AuditResult`, `REGISTRY`, `ORDER_OF`,
+`resample_fft`, `guess_signature` and the `leakage-audit` / `invariance-agent`
+entry points — follows semantic versioning: breaking changes bump the major,
+new behaviour bumps the minor, fixes bump the patch. The signature labels
+returned by the engine are heuristic structural warnings, not invariance
+orders; an order is measured, not read off a formula.
 
 ---
 
