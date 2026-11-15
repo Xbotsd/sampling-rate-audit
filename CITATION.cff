@@ -14,7 +14,7 @@ authors:
     affiliation: "School of Mechanical Engineering, Heilongjiang University of Science and Technology"
 preferred-citation:
   type: article
-  title: "Sampling Rate as an Influence Quantity: A Paired Audit of Sampled-Signal Feature Definitions"
+  title: "An audit protocol and reference implementation for sampling-grid sensitivity in physiological signal features"
   authors:
     - family-names: Xu
       given-names: Yudong
@@ -23,5 +23,5 @@ preferred-citation:
     - family-names: Song
       given-names: Changyu
   year: 2026
-  note: "Manuscript under review. An earlier preprint titled 'Invariance Orders and a Definition-Level Audit of Physiological Feature Sets' (doi:10.5281/zenodo.23679114) is superseded by this version; its asymptotic-order and threshold claims are withdrawn."
+  note: "Manuscript under review at Computer Methods and Programs in Biomedicine. An earlier preprint titled 'Invariance Orders and a Definition-Level Audit of Physiological Feature Sets' (doi:10.5281/zenodo.23679114) is superseded by this version; its asymptotic-order and threshold claims are withdrawn."
 

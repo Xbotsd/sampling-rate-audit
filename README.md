@@ -13,14 +13,16 @@ orders or formal proofs.
 
 It is the reference implementation accompanying
 
-> Xu, Y., Han, L., and Song, C. *Sampling Rate as an Influence Quantity: A
-> Paired Audit of Sampled-Signal Feature Definitions* (substantially revised).
+> Xu, Y., Han, L., and Song, C. *An audit protocol and reference implementation
+> for sampling-grid sensitivity in physiological signal features* (under review,
+> Computer Methods and Programs in Biomedicine).
 
 ## Status and provenance
 
 - Version 1.0.1, archived as doi:10.5281/zenodo.24154075. The concept doi
   `10.5281/zenodo.24123019` always resolves to the latest archived version.
-  The accompanying manuscript is under review.
+  The accompanying manuscript is under review at Computer Methods and Programs in
+  Biomedicine.
 - **Archived on Zenodo: [10.5281/zenodo.24153259](https://doi.org/10.5281/zenodo.24153259)**
   (software, MIT). That record carries two files: this package, and the per-record
   feature values, fit outputs and figures behind every table and figure of the
