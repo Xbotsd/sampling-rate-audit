@@ -94,6 +94,15 @@ class DemoGuard:
             code = WARNING
             ratio_text = "the predicted deficit is not a finite number"
             severe = True
+        elif value < 0.0:
+            # A deficit is |Δfeature| / |reference|, so a negative value is a
+            # programming error upstream, not a comfortable margin. Refusing to
+            # call it SAFE is the whole point of this branch: "cannot verify"
+            # must never read as "verified safe".
+            code = WARNING
+            ratio_text = ("the predicted deficit is negative (%.4g), which cannot "
+                          "be a relative magnitude" % value)
+            severe = True
         else:
             ratio = value / self.tolerance
             code = SAFE if value <= self.tolerance else WARNING

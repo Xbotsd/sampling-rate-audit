@@ -9,3 +9,7 @@ dist/
 *.tif
 *.pdf
 examples/_*.npy
+# Demo figure output (examples/v2_demo_tutorial.py)
+v2_demo_decay.png
+demo.png
+demo_check.png

@@ -167,6 +167,13 @@ def test_guard_survives_a_non_numeric_input():
     assert g.check_risk(float("nan")) == WARNING
 
 
+def test_guard_does_not_call_a_negative_deficit_safe():
+    """A negative deficit is an upstream error, not a comfortable margin."""
+    g = DemoGuard(tolerance=0.01, verbose=False)
+    assert g.check_risk(-5.0) == WARNING
+    assert g.check_risk(-1e-9) == WARNING
+
+
 def test_guard_rejects_a_nonsense_tolerance():
     with pytest.raises(ValueError):
         DemoGuard(tolerance=0.0)
