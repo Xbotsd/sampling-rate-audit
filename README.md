@@ -1,5 +1,23 @@
 # sampling-rate-audit
 
+> [!WARNING]
+> **This branch is `V2.1.1-demo`, a teaching sandbox. It is not the release.**
+>
+> - **Not for production, not for publication, not for clinical or industrial
+>   decisions.** Everything here is an outer wrapper around the audited engine
+>   plus a curve fit; nothing in it has been validated.
+> - **There is no enforcement of any kind.** `DemoGuard` prints a warning and
+>   returns a string. It does not block, does not raise, does not roll back,
+>   does not lock anything, and does not touch your files. A green light from
+>   this build means nothing.
+> - **The fitted exponent is descriptive.** `d = C·r^(−p)` is fitted to the
+>   rate cells you actually audited. Outside that range it is an extrapolation,
+>   and extrapolating a power law past its data is exactly the mistake this
+>   package exists to warn about.
+> - **Use `main` for real work.** The audited release is `v1.0.1`, archived as
+>   [doi:10.5281/zenodo.24154075](https://doi.org/10.5281/zenodo.24154075).
+>   This branch is not tagged and will never be archived.
+
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24123019.svg)](https://doi.org/10.5281/zenodo.24123019) [![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/Xbotsd/badge.svg)](https://hub.xerj.org/contributors/Xbotsd)
 
 How much of a feature is measuring the signal, and how much is measuring the
@@ -19,10 +37,13 @@ It is the reference implementation accompanying
 
 ## Status and provenance
 
-- Version 1.0.1, archived as doi:10.5281/zenodo.24154075. The concept doi
-  `10.5281/zenodo.24123019` always resolves to the latest archived version.
-  The accompanying manuscript is under review at Computer Methods and Programs in
-  Biomedicine.
+- **On `main`, the audited release is version 1.0.1**, archived as
+  doi:10.5281/zenodo.24154075. The concept doi `10.5281/zenodo.24123019` always
+  resolves to the latest archived version. The accompanying manuscript is under
+  review at Computer Methods and Programs in Biomedicine.
+- **On this branch (`V2.1.1-demo`) the package reports version 2.1.1 and
+  `DEMO_BUILD = True`.** It is a sandbox: no tag, no Zenodo record, no DOI. If
+  you arrived here from a search result, go to `main`.
 - **Archived on Zenodo: [10.5281/zenodo.24153259](https://doi.org/10.5281/zenodo.24153259)**
   (software, MIT). That record carries two files: this package, and the per-record
   feature values, fit outputs and figures behind every table and figure of the
@@ -32,6 +53,26 @@ It is the reference implementation accompanying
   "strict lower bound") that the manuscript has since withdrawn. It is
   superseded by the version under review.
 - The per-record results are in the archival deposit, not in this git tree.
+
+## What the demo adds (and what it refuses to claim)
+
+| module | what it does |
+|---|---|
+| `leakage_audit/estimator.py` | fits `d = C·r^(−p)` to the paired deficits: `nls` (linear space), `mle` (log-normal, profiled σ), `huber` (robust, MAD-scaled) |
+| `leakage_audit/demoguard.py` | compares a predicted deficit with your tolerance and **prints**; returns `"SAFE"` / `"WARNING"`; never raises, never blocks, never writes |
+| `leakage_audit/visualizer.py` | scatter + fitted curve + green/amber/red bands, with a marker where the audited range ends |
+| `Audit(fit_order=..., estimator_method=...)` | attaches the fits to `AuditResult.fits`; the audit rows themselves are untouched |
+
+```bash
+pip install -e ".[demo]"                 # numpy + scipy + matplotlib
+python examples/v2_demo_tutorial.py      # end-to-end, writes v2_demo_decay.png
+pytest -q                                # 60 tests
+```
+
+The exponent is a **finite-range descriptive fit**. `PowerLawFit.note` says so
+when a fit rests on two points, and `DemoGuard`'s message says so every time it
+warns. Neither of them is a measurement of anything outside the rate cells you
+actually audited.
 
 ### Versioning
 

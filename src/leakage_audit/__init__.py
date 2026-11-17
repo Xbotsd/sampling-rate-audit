@@ -32,7 +32,11 @@ The invariance order is assigned from a five-bit signature:
 
 from __future__ import annotations
 
-__version__ = "1.0.1"
+__version__ = "2.1.1"
+
+# True only on the demo branch. Consulted by the CLI and the README so that a
+# sandbox build can never be mistaken for the audited release.
+DEMO_BUILD = True
 
 import csv
 import json
@@ -301,6 +305,8 @@ class AuditResult:
     band: float = 0.0
     fs: float = 0.0
     mode: str = "single"
+    fits: dict = field(default_factory=dict)   # DEMO: feature -> PowerLawFit
+    fit_note: str = ""                          # DEMO: why fits may be empty
 
     def exponents(self):
         out = {}
@@ -348,6 +354,31 @@ class AuditResult:
             out.append("| `%s` | %s | %s | %s |" % (f, od_s, " | ".join(cells), ps))
         return "\n".join(out)
 
+    def fit_markdown(self):
+        """DEMO: table of the fitted power laws, if any were requested.
+
+        一次性把每个特征的 ``p``、``C``、残差和拟合状态列出来。没有拟合时
+        返回一句说明，而不是空表——调用方可以无条件打印。
+        """
+        if not self.fits:
+            return self.fit_note or "_(no order fit requested; run with fit_order=True)_"
+        head = ("| feature | method | p | C | RSS | n | note |\n"
+                "|---|---|---|---|---|---|---|")
+        lines = [head] if not self.fit_note else ["> " + self.fit_note, head]
+        for f in sorted(self.fits):
+            fit = self.fits[f]
+            if fit is None:
+                lines.append("| `%s` | - | - | - | - | 0 | fit unavailable |" % f)
+                continue
+            if not getattr(fit, "ok", False):
+                lines.append("| `%s` | %s | - | - | - | %d | %s |"
+                             % (f, fit.method, fit.n, fit.note or "no fit"))
+                continue
+            lines.append("| `%s` | %s | %.3f | %.3g | %.3g | %d | %s |"
+                         % (f, fit.method, fit.p, fit.C, fit.rss, fit.n,
+                            fit.note or ""))
+        return "\n".join(lines)
+
     def to_csv(self, path):
         with open(path, "w", newline="", encoding="utf-8") as fh:
             w = csv.DictWriter(fh, fieldnames=list(self.rows[0]))
@@ -355,9 +386,11 @@ class AuditResult:
             w.writerows(self.rows)
 
     def to_json(self, path):
-        json.dump(dict(band=self.band, fs=self.fs, mode=self.mode,
-                       rows=self.rows, exponents=self.exponents()),
-                  open(path, "w"), indent=1)
+        payload = dict(band=self.band, fs=self.fs, mode=self.mode,
+                       rows=self.rows, exponents=self.exponents())
+        if self.fits:
+            payload["fits"] = {f: fit.as_dict() for f, fit in self.fits.items()}
+        json.dump(payload, open(path, "w"), indent=1)
 
 
 class Audit:
@@ -365,11 +398,82 @@ class Audit:
 
     run(x)             single signal  -> relative bias and fitted exponent
     run_many([x, ...]) many signals   -> AUC, effect size and exponent
+
+    DEMO parameters (V2.1.1-demo)
+    -----------------------------
+    fit_order : bool, default True
+        Attach a power-law fit per feature to ``AuditResult.fits``.  Fitting is
+        strictly additive: ``markdown()``, ``exponents()``, the CSV columns and
+        every V1 code path are unchanged.  Set False for the exact V1 behaviour.
+    estimator_method : {"nls", "mle", "huber"}
+        Which estimator :func:`leakage_audit.estimator.estimate_order` uses.
+    tolerance : float, optional
+        Your admissible deficit.  Stored on the engine so that
+        :class:`~leakage_audit.demoguard.DemoGuard` and
+        :func:`~leakage_audit.visualizer.plot_decay` can default to it.
     """
 
-    def __init__(self, features=None, demean=True):
+    def __init__(self, features=None, demean=True, fit_order=True,
+                 estimator_method="nls", tolerance=None, estimator=None):
         self.features = features or list(REGISTRY)
         self.demean = demean
+        self.fit_order = bool(fit_order)
+        self.estimator_method = str(estimator_method or "nls")
+        self.tolerance = tolerance
+        # ``estimator`` is accepted as an alias so that a call written against
+        # the demo announcement (Audit(estimator="mle")) keeps working.
+        if estimator is not None:
+            self.estimator_method = str(estimator)
+
+    # ------------------------------------------------------------------ fit
+    def _attach_fits(self, result):
+        """Fit every feature that has at least two informative rate cells.
+
+        拟合失败绝不打断审计：异常在这里被吞掉，只让 ``fits`` 里少一项。
+        审计本身（配对亏空）是主产物，拟合是附加物。
+
+        scipy 是可选依赖。若环境里没有装（核心包只声明 numpy），这里不会
+        报错，而是把 ``result.fit_note`` 写成"需要 [demo] 额外依赖"并返回
+        一个空的 ``fits``——装了 numpy 的人不该因为库默认开着拟合就跑不动。
+        """
+        try:
+            from .estimator import estimate_order, available_methods
+        except ImportError as exc:            # pragma: no cover - env dependent
+            result.fit_note = ("order fitting needs scipy: pip install "
+                               "'sampling-rate-audit[demo]' (%s)" % exc)
+            return result
+
+        method = self.estimator_method
+        if method not in available_methods():
+            raise ValueError("unknown estimator_method %r; choose from %s"
+                             % (method, ", ".join(available_methods())))
+
+        missing_scipy = False
+        for feature in sorted({row["feature"] for row in result.rows}):
+            xs, ys = [], []
+            for row in result.rows:
+                if row["feature"] != feature:
+                    continue
+                value = row.get("rel_bias", float("nan"))
+                if not np.isfinite(value) or value <= 0:
+                    continue
+                xs.append(float(row["r"]))
+                ys.append(float(value))
+            if len(xs) < 2:
+                continue
+            if missing_scipy:
+                result.fits[feature] = None
+                continue
+            try:
+                result.fits[feature] = estimate_order(ys, xs, method=method)
+            except ImportError as exc:        # scipy absent
+                missing_scipy = True
+                result.fits[feature] = None
+                result.fit_note = ("order fitting needs scipy: pip install "
+                                   "'sampling-rate-audit[demo]' (%s)" % exc)
+            except Exception:  # noqa: BLE001 - a failed fit must not fail the audit
+                result.fits[feature] = None
+        return result
 
     def _prep(self, x, fs, band, rates, anchor):
         x = np.asarray(x, float)
@@ -419,8 +523,9 @@ class Audit:
 
     def run(self, x, fs, band=None, rates=None, anchor=None):
         x, band, anchor, rates = self._prep(x, fs, band, rates, anchor)
-        return AuditResult(rows=self._one(x, fs, band, anchor, rates),
-                           band=band, fs=fs, mode="single")
+        result = AuditResult(rows=self._one(x, fs, band, anchor, rates),
+                             band=band, fs=fs, mode="single")
+        return self._attach_fits(result) if self.fit_order else result
 
     def run_many(self, signals, fs, band=None, rates=None, anchor=None):
         sigs = [np.asarray(s, float) for s in signals]
@@ -444,10 +549,12 @@ class Audit:
                             fs=rr * band, r=rr, auc=auc(pos, neg),
                             d=float(abs(np.median(pos) - np.median(neg)) / mad),
                             rel_bias=rel, n=len(pos)))
-        return AuditResult(rows=out, band=band, fs=fs, mode="multi")
+        result = AuditResult(rows=out, band=band, fs=fs, mode="multi")
+        return self._attach_fits(result) if self.fit_order else result
 
 
 __all__ = [
     "Audit", "AuditResult", "REGISTRY", "ORDER_OF",
     "resample_fft", "estimate_band", "auc", "guess_signature",
+    "DEMO_BUILD", "__version__",
 ]
