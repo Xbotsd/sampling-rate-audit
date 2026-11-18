@@ -212,6 +212,16 @@ def test_wrong_phrase_is_refused_after_attempts(tmp_path):
                           max_attempts=2)
 
 
+def test_closed_stdin_is_a_clear_refusal(tmp_path):
+    """Cron or CI has no terminal; that must not be an EOFError traceback."""
+    def eof():
+        raise EOFError()
+
+    with pytest.raises(RuntimeError, match="i-understand-risks"):
+        require_agreement(cache_path=tmp_path / ".sra_agreement",
+                          input_fn=eof, clock=FakeClock(), stream=io.StringIO())
+
+
 def test_skip_flag_records_an_explicit_acknowledgement(tmp_path):
     cache = tmp_path / ".sra_agreement"
     require_agreement(cache_path=cache, skip=True, stream=io.StringIO())
@@ -251,6 +261,30 @@ def test_sandbox_publish_copies_out(tmp_path):
         box.write("result.json", '{"ok": true}')
         dest = box.publish(tmp_path / "out")
     assert (dest / "result.json").exists()
+
+
+def test_default_sandbox_lives_in_the_system_temp_dir():
+    """Regression: dir='' put every sandbox in the user's working directory."""
+    box = Sandbox()
+    try:
+        assert not str(box.path).startswith(os.getcwd()), (
+            "the sandbox must not be created inside the caller's working directory: %s"
+            % box.path)
+    finally:
+        box.rollback()
+
+
+def test_sandbox_is_cleaned_up_on_any_exception(tmp_path):
+    """A failure that is not a deadlock must still not leak a temp directory."""
+    engine = Audit(features=TOY_FEATURES, formal_guard=FormalGuard(
+        1e6, state_path=tmp_path / ".sra_deadlock", verbose=False),
+        tolerance=1e6)
+    with pytest.raises(ValueError):
+        # every arm is filtered out by the Nyquist rule -> ValueError from _prep
+        engine.run(_toy_signal(), fs=500, band=240, rates=[250.0, 125.0])
+    assert engine.last_sandbox is not None
+    assert engine.last_sandbox.rolled_back is True
+    assert not engine.last_sandbox.path.exists()
 
 
 # --------------------------------------------------------------------------

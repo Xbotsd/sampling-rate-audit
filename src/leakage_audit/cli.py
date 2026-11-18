@@ -89,7 +89,14 @@ def main():
         from .formalguard import FormalGuard, require_agreement
 
         if not a.i_understand_risks:
-            require_agreement(cache_path=a.agreement_cache)
+            try:
+                require_agreement(cache_path=a.agreement_cache)
+            except RuntimeError as exc:
+                # The protocol was refused (no terminal, or the paste was too
+                # fast). Print the reason once and stop; no traceback for a
+                # predictable refusal.
+                print("strict mode refused: %s" % exc, file=sys.stderr)
+                raise SystemExit(2)
         guard = FormalGuard(a.tolerance, state_path=a.deadlock_file,
                             strict=True)
 

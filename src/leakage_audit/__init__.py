@@ -587,6 +587,11 @@ class Audit:
             box.rollback()
             print(format_rollback_message())
             raise
+        except BaseException:
+            # 任何其他异常也必须清掉沙盒，否则临时目录会一直留在磁盘上。
+            # 这里只做清理，不改变异常本身。
+            box.rollback()
+            raise
 
     def run(self, x, fs, band=None, rates=None, anchor=None):
         def compute():

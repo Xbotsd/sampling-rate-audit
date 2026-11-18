@@ -302,7 +302,15 @@ def require_agreement(*, cache_path=None, input_fn=input, clock=time.monotonic,
     for attempt in range(max_attempts):
         prompt = "> " if attempt == 0 else "> (try again) "
         print(prompt, end="", file=out, flush=True)
-        phrase = input_fn()
+        try:
+            phrase = input_fn()
+        except EOFError:
+            # No stdin (cron, CI, a closed pipe). That is a refusal, not a crash:
+            # give the caller a message that says what to do instead.
+            raise RuntimeError(
+                "the strict-mode protocol needs an interactive confirmation; "
+                "pass --i-understand-risks to acknowledge it explicitly, or "
+                "run with a terminal") from None
         if phrase.strip() == AGREEMENT_PHRASE:
             break
         print("  That does not match. Copy the line exactly.", file=out)
@@ -364,7 +372,11 @@ class Sandbox:
 
     def __init__(self, root=None, prefix="sra_sandbox_"):
         self._root = Path(root) if root else None
-        self._tmp = tempfile.TemporaryDirectory(prefix=prefix, dir=str(self._root or ""))
+        # dir=None means "the system temporary directory". Passing "" would
+        # mean "the current working directory", which would litter the user's
+        # project with sra_sandbox_* directories and break on a read-only cwd.
+        self._tmp = tempfile.TemporaryDirectory(
+            prefix=prefix, dir=str(self._root) if self._root else None)
         self.path = Path(self._tmp.name)
         self.rolled_back = False
         self.published = False
