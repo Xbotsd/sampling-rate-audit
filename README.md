@@ -1,7 +1,7 @@
 # sampling-rate-audit
 
 > [!WARNING]
-> **Version 2.1.1 adds a fitted decay curve and an optional strict mode. Neither
+> **Version 2.1.2 adds a fitted decay curve and an optional strict mode. Neither
 > turns an extrapolation into a measurement.**
 >
 > - **The fitted exponent is descriptive.** `d = C·r^(−p)` is fitted to the rate
@@ -18,7 +18,7 @@
 >   nothing outside the sandbox is ever written.
 > - **The archived release is still `v1.0.1`**
 >   ([doi:10.5281/zenodo.24154075](https://doi.org/10.5281/zenodo.24154075)).
->   Version 2.1.1 is not archived and has no DOI.
+>   Version 2.1.2 is not archived and has no DOI.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24123019.svg)](https://doi.org/10.5281/zenodo.24123019) [![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/Xbotsd/badge.svg)](https://hub.xerj.org/contributors/Xbotsd)
 
@@ -47,10 +47,14 @@ It is the reference implementation accompanying
   2.1.2 adds the order fit and strict mode on top of the unchanged 1.0.1 engine.
   It is tagged `v2.1.2` but **not archived**; 1.0.1 remains the citable artefact.
   See [`RELEASE_NOTES_V2.1.X.md`](RELEASE_NOTES_V2.1.X.md).
-- **Archived on Zenodo: [10.5281/zenodo.24153259](https://doi.org/10.5281/zenodo.24153259)**
-  (software, MIT). That record carries two files: this package, and the per-record
-  feature values, fit outputs and figures behind every table and figure of the
-  manuscript. Cite the DOI for the code; cite the article for the science.
+- **Zenodo holds two archived versions of this package**: 1.0.0
+  ([10.5281/zenodo.24153259](https://doi.org/10.5281/zenodo.24153259)) and 1.0.1
+  ([10.5281/zenodo.24154075](https://doi.org/10.5281/zenodo.24154075)); the
+  concept DOI `10.5281/zenodo.24123019` resolves to the latest of them. Each
+  record carries two files: this package, and the per-record feature values, fit
+  outputs and figures behind every table and figure of the manuscript. Cite the
+  DOI for the code; cite the article for the science. **2.1.2 is not there and
+  will not be** — it stays a GitHub release only.
 - `10.5281/zenodo.23679114` is an **earlier preprint**, not this code: one
   file, the old title, and claims (asymptotic invariance orders, `r >= 10`,
   "strict lower bound") that the manuscript has since withdrawn. It is
