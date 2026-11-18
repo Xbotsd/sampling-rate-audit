@@ -75,6 +75,16 @@ class DemoGuard:
         self.history = []          # list of dicts, for a session summary
 
     # ------------------------------------------------------------------
+    def check_extrapolation(self, predicted_deficit):
+        """Alias of :meth:`check_risk`, kept for the wording in the demo notes.
+
+        同一个检查的两个名字：``check_risk`` 描述"这个预测值有多危险"，
+        ``check_extrapolation`` 描述调用场景"你在用外推的曲线做决定"。
+        两者行为完全一致，都只打印、都返回 ``SAFE`` / ``WARNING``。
+        """
+        return self.check_risk(predicted_deficit)
+
+    # ------------------------------------------------------------------
     def check_risk(self, predicted_deficit):
         """Compare one predicted deficit with the tolerance.
 

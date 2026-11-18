@@ -66,7 +66,7 @@ It is the reference implementation accompanying
 ```bash
 pip install -e ".[demo]"                 # numpy + scipy + matplotlib
 python examples/v2_demo_tutorial.py      # end-to-end, writes v2_demo_decay.png
-pytest -q                                # 60 tests
+pytest -q                                # 65 tests
 ```
 
 The exponent is a **finite-range descriptive fit**. `PowerLawFit.note` says so

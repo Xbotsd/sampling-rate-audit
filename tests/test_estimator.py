@@ -202,6 +202,43 @@ def test_module_level_check_helper():
     assert check(0.5, tolerance=0.01, verbose=False) == WARNING
 
 
+def test_guard_exposes_the_documented_alias():
+    """The demo notes call it check_extrapolation; it must behave identically."""
+    g = DemoGuard(tolerance=0.05, verbose=False)
+    assert g.check_extrapolation(0.01) == SAFE
+    assert g.check_extrapolation(0.5) == WARNING
+
+
+def test_huber_delta_is_honoured():
+    """A larger delta approaches least squares; a smaller one is more robust."""
+    d = synthetic_deficits(noise=0.05, seed=0)
+    d[3] *= 4.0
+    loose = estimate_order_huber(d, RATES, delta=20.0)
+    tight = estimate_order_huber(d, RATES, delta=0.5)
+    assert loose.ok and tight.ok
+    # The outlier pulls the loose fit toward the least-squares answer.
+    assert abs(loose.p - TRUE_P) > abs(tight.p - TRUE_P)
+
+
+def test_demo_tutorial_runs_without_plotting(tmp_path, capsys):
+    """The example is part of the deliverable, so it gets a smoke test."""
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "examples" / "v2_demo_tutorial.py"
+    spec = importlib.util.spec_from_file_location("v2_demo_tutorial", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.DURATION_S = 2.0          # same code path, a fifth of the samples
+
+    rc = module.main(["--no-plot", "--method", "nls", "--tolerance", "0.01"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "DEMO ONLY" in out
+    assert "empirical order" in out
+    assert "DemoGuard:" in out
+
+
 # -------------------------------------------------------------------- demo
 def test_demo_build_flag_is_set():
     """The branch identity must be visible from code, not only from the README."""
@@ -215,13 +252,14 @@ def test_audit_attaches_fits_and_keeps_v1_behaviour():
     x = sum(rng.rayleigh(1.0) * np.cos(2 * np.pi * rng.uniform(1, band) * t
                                   + rng.uniform(0, 2 * np.pi)) for _ in range(12))
 
-    demo = Audit(estimator_method="mle").run(x, fs=fs, band=band,
-                                             rates=[250, 125, 62.5])
+    demo = Audit(features=TOY_FEATURES, estimator_method="mle").run(
+        x, fs=fs, band=band, rates=[250, 125, 62.5])
     assert demo.fits, "no fits attached"
     assert any(f is not None and f.ok for f in demo.fits.values())
     assert demo.markdown().startswith("| feature | order |")
 
-    v1 = Audit(fit_order=False).run(x, fs=fs, band=band, rates=[250, 125, 62.5])
+    v1 = Audit(features=TOY_FEATURES, fit_order=False).run(
+        x, fs=fs, band=band, rates=[250, 125, 62.5])
     assert v1.fits == {}
     assert v1.rows == demo.rows, "fitting must not change the audit itself"
     assert "no order fit" in v1.fit_markdown().replace("requested", "requested")
@@ -249,21 +287,26 @@ def test_audit_degrades_gracefully_without_scipy(monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
     x = np.random.default_rng(0).normal(size=2000)
-    result = Audit(estimator_method="nls").run(x, fs=500, band=20,
-                                               rates=[250.0, 125.0, 62.5])
+    result = Audit(features=TOY_FEATURES, estimator_method="nls").run(
+        x, fs=500, band=20, rates=[250.0, 125.0, 62.5])
     assert result.rows, "the audit itself must still run"
     assert "scipy" in result.fit_note
     assert "scipy" in result.fit_markdown()
 
 
 # ------------------------------------------------------------- visualizer
+# A handful of features is enough to exercise the plotter and the wiring; the
+# full eighteen make each audit take ten seconds for no extra coverage.
+TOY_FEATURES = ["zcr_per_sample", "turning_per_sample", "spec_entropy", "std"]
+
+
 def _toy_result(method="mle"):
     fs, band = 500.0, 20.0
     rng = np.random.default_rng(5)
-    t = np.arange(int(6 * fs)) / fs
+    t = np.arange(int(4 * fs)) / fs
     x = sum(rng.rayleigh(1.0) * np.cos(2 * np.pi * rng.uniform(1, band) * t
                                   + rng.uniform(0, 2 * np.pi)) for _ in range(10))
-    return Audit(estimator_method=method).run(
+    return Audit(features=TOY_FEATURES, estimator_method=method).run(
         x, fs=fs, band=band, rates=[250.0, 125.0, 62.5, 50.0])
 
 
@@ -304,8 +347,8 @@ def test_plot_decay_without_fits_still_plots(tmp_path):
 
     fs, band = 500.0, 20.0
     x = np.random.default_rng(2).normal(size=int(4 * fs))
-    result = Audit(fit_order=False).run(x, fs=fs, band=band,
-                                        rates=[250.0, 125.0, 62.5])
+    result = Audit(features=TOY_FEATURES, fit_order=False).run(
+        x, fs=fs, band=band, rates=[250.0, 125.0, 62.5])
     out = tmp_path / "nofit.png"
     plot_decay(result, features=["std"], out_path=out)
     assert out.exists()

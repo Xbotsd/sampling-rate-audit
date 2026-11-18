@@ -1,3 +1,5 @@
+# DEMO BRANCH (V2.1.1-demo): this file still describes the archived release.
+# The package on this branch reports 2.1.1 and is not archived; cite main.
 cff-version: 1.2.0
 message: "If you use this software, please cite the article below."
 title: "sampling-rate-audit"
