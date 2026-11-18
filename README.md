@@ -43,9 +43,10 @@ It is the reference implementation accompanying
   The concept doi `10.5281/zenodo.24123019` always resolves to the latest archived
   version. The accompanying manuscript is under review at Computer Methods and
   Programs in Biomedicine.
-- **`main` now reports version 2.1.1 and `DEMO_BUILD = False`.** 2.1.1 adds the
-  order fit and strict mode on top of the unchanged 1.0.1 engine. It is not
-  tagged and not archived; 1.0.1 remains the citable artefact.
+- **`main` reports version 2.1.2 (Formal Guard Edition), `DEMO_BUILD = False`.**
+  2.1.2 adds the order fit and strict mode on top of the unchanged 1.0.1 engine.
+  It is tagged `v2.1.2` but **not archived**; 1.0.1 remains the citable artefact.
+  See [`RELEASE_NOTES_V2.1.X.md`](RELEASE_NOTES_V2.1.X.md).
 - **Archived on Zenodo: [10.5281/zenodo.24153259](https://doi.org/10.5281/zenodo.24153259)**
   (software, MIT). That record carries two files: this package, and the per-record
   feature values, fit outputs and figures behind every table and figure of the
@@ -56,7 +57,7 @@ It is the reference implementation accompanying
   superseded by the version under review.
 - The per-record results are in the archival deposit, not in this git tree.
 
-## What 2.1.1 adds (and what it refuses to claim)
+## What 2.1.2 adds (and what it refuses to claim)
 
 | module | what it does |
 |---|---|
@@ -69,7 +70,7 @@ It is the reference implementation accompanying
 ```bash
 pip install -e ".[demo]"                 # numpy + scipy + matplotlib
 python examples/v2_demo_tutorial.py      # end-to-end, writes v2_demo_decay.png
-pytest -q                                # 97 tests
+pytest -q                                # 100 tests
 
 # strict mode
 leakage-audit --npy rec.npy --fs 500 --band 20 --rates 250 125 62.5 \
@@ -79,8 +80,17 @@ leakage-audit --npy rec.npy --fs 500 --band 20 --rates 250 125 62.5 \
 #   keeps the sandbox and the guard)
 ```
 
-Strict mode exits with **code 3** when it trips, and the event file records the
-timestamp, the reason, the tolerance and a host label.
+### Exit codes
+
+| code | meaning |
+|---|---|
+| `0` | completed |
+| `1` | data / parameter error: missing file, malformed array, no arm left after the Nyquist rule |
+| `2` | protocol refused: no terminal, confirmation under 3 s, or the phrase did not match |
+| `3` | deadlock triggered: the fitted curve predicted a deficit above the tolerance; the sandbox was rolled back |
+
+The constants live in `cli.py` (`EXIT_OK`, `EXIT_DATA`, `EXIT_PROTOCOL`,
+`EXIT_DEADLOCK`) and are covered end to end.
 
 ### What strict mode is not
 

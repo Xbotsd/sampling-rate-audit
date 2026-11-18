@@ -4,11 +4,11 @@ All notable changes to `sampling-rate-audit` are recorded here. The format follo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.1] — 2026-11-18 — **main; not archived**
+## [2.1.2] — 2026-11-18 — **Formal Guard Edition**
 
-Adds a fitted decay curve and an optional strict mode on top of the unchanged
-1.0.1 engine. The archived, citable artefact remains **1.0.1**
-(`doi:10.5281/zenodo.24154075`); this version has no tag and no DOI.
+Adds a fitted decay curve and strict mode on top of the unchanged 1.0.1 engine.
+Tagged `v2.1.2`, **not archived**; the citable artefact remains **1.0.1**
+(`doi:10.5281/zenodo.24154075`). See `RELEASE_NOTES_V2.1.X.md`.
 
 ### Added — order estimation and visualisation
 
@@ -42,6 +42,13 @@ Adds a fitted decay curve and an optional strict mode on top of the unchanged
     computes inside it and rolls it back before re-raising.
 - CLI: `--strict`, `--tolerance`, `--i-understand-risks`, `--agreement-cache`,
   `--deadlock-file`. A tripped deadlock exits with code 3.
+
+### Added — documented exit codes
+
+`0` completed, `1` data/parameter error, `2` protocol refused, `3` deadlock.
+Usage errors from the argument parser now exit 1 instead of argparse's default 2,
+so 2 means the protocol gate and nothing else. Exposed as `EXIT_OK`,
+`EXIT_DATA`, `EXIT_PROTOCOL`, `EXIT_DEADLOCK` in `cli.py`.
 
 ### Changed
 

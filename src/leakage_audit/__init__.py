@@ -32,7 +32,7 @@ The invariance order is assigned from a five-bit signature:
 
 from __future__ import annotations
 
-__version__ = "2.1.1"
+__version__ = "2.1.2"
 
 # The order-fitting layer is teaching material, not evidence. False means this
 # is the released line (main), which also ships strict mode; the V2.1.1-demo

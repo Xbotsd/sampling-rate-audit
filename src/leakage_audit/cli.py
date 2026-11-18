@@ -51,9 +51,30 @@ def selftest(n_real=20):
         print("%-26s%15s   %s" % (f, ps, "inf" if exp == float("inf") else "%g" % exp))
 
 
+class _Parser(argparse.ArgumentParser):
+    """ArgumentParser that uses the documented exit code for usage errors.
+
+    argparse exits with 2 by default, which would collide with "protocol
+    refused". The CLI contract reserves 2 for the protocol gate, so usage and
+    parameter errors exit 1 instead.
+    """
+
+    def error(self, message):
+        self.print_usage(sys.stderr)
+        print("%s: error: %s" % (self.prog, message), file=sys.stderr)
+        raise SystemExit(1)
+
+
+#: Documented exit codes. Keep in sync with RELEASE_NOTES_V2.1.X.md.
+EXIT_OK = 0
+EXIT_DATA = 1
+EXIT_PROTOCOL = 2
+EXIT_DEADLOCK = 3
+
+
 def main():
     import argparse
-    ap = argparse.ArgumentParser(description="Sampling-rate leakage audit")
+    ap = _Parser(description="Sampling-rate leakage audit")
     ap.add_argument("--npy", help="1-D .npy of samples")
     ap.add_argument("--csv", help="single-column CSV of samples")
     ap.add_argument("--dir", help="directory of .npy files, one per record")
@@ -96,7 +117,7 @@ def main():
                 # fast). Print the reason once and stop; no traceback for a
                 # predictable refusal.
                 print("strict mode refused: %s" % exc, file=sys.stderr)
-                raise SystemExit(2)
+                raise SystemExit(EXIT_PROTOCOL)
         guard = FormalGuard(a.tolerance, state_path=a.deadlock_file,
                             strict=True)
 
@@ -123,7 +144,12 @@ def main():
         # 退出码，避免把契约异常埋进 traceback 里。程序化调用方拿到的仍然是
         # DeadlockError 本身——库没有吞掉它。
         print("strict mode: run aborted, exit code 3", file=sys.stderr)
-        raise SystemExit(3)
+        raise SystemExit(EXIT_DEADLOCK)
+    except (ValueError, OSError) as exc:
+        # Bad path, malformed array, no arm left after the Nyquist rule, ...
+        # These are data/parameter errors: documented as exit code 1.
+        print("input error: %s" % exc, file=sys.stderr)
+        raise SystemExit(EXIT_DATA)
 
     print("band B = %.3f Hz   fs = %g Hz   mode = %s" % (res.band, res.fs, res.mode))
     print(res.markdown())

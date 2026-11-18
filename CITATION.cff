@@ -1,12 +1,14 @@
-# DEMO BRANCH (V2.1.1-demo): this file still describes the archived release.
-# The package on this branch reports 2.1.1 and is not archived; cite main.
+# This file describes the package on main.
+# 2.1.2 is the current release line but is NOT archived: it has no DOI of its own.
+# The archived, citable artefact remains 1.0.1; the concept DOI below always
+# resolves to the latest *archived* version (currently 1.0.1).
 cff-version: 1.2.0
-message: "If you use this software, please cite the article below."
+message: "If you use this software, please cite the article below. The archived software record is 1.0.1 (concept DOI 10.5281/zenodo.24123019); 2.1.2 is not archived."
 title: "sampling-rate-audit"
-version: 1.0.1
-# Concept DOI: always resolves to the latest archived version, so this file cannot go stale.
+version: 2.1.2
+# Concept DOI: always resolves to the latest archived version.
 doi: 10.5281/zenodo.24123019
-date-released: 2026-11-12
+date-released: 2026-11-18
 license: MIT
 repository-code: https://github.com/Xbotsd/sampling-rate-audit
 authors:

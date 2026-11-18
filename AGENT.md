@@ -22,6 +22,81 @@ invariance-agent schema                       # machine-readable contract
 invariance-agent wizard                       # guided first run
 ```
 
+> **Version note.** This file is current for **2.1.2**. The archived, citable
+> release is still **1.0.1** (concept DOI `10.5281/zenodo.24123019`); 2.1.2 adds
+> the order fit and strict mode but is not archived. See
+> `RELEASE_NOTES_V2.1.X.md`.
+
+---
+
+## Strict mode (2.1.2)
+
+`Audit(formal_guard=...)` turns the advisory behaviour into a gate. In this mode
+the run happens inside a sandbox and every fitted curve is checked at the lowest
+audited rate.
+
+```python
+from leakage_audit import Audit
+from leakage_audit.formalguard import FormalGuard, DeadlockError, Sandbox
+
+guard = FormalGuard(tolerance=0.01, state_path=".sra_deadlock")
+engine = Audit(formal_guard=guard, tolerance=0.01)
+
+try:
+    result = engine.run(record, fs=500, band=20, rates=[250, 125, 62.5])
+except DeadlockError:
+    # The sandbox is already gone; result was never returned.
+    # Nothing outside the sandbox was written.
+    raise
+```
+
+### What a violation does
+
+1. Appends one JSON line to `.sra_deadlock`: timestamp, reason, tolerance,
+   context, version, and a host label.
+2. Raises `DeadlockError` — a `RuntimeError` whose message is exactly
+   `SRA_DEADLOCK_PROTECTION_TRIGGERED`.
+3. The sandbox is rolled back before the exception leaves `Audit.run`.
+
+Negative, `NaN`, `Inf` and non-numeric inputs count as the **highest** risk.
+A failed write to the event file does **not** turn the violation into a pass.
+
+### Protocol gate
+
+```python
+from leakage_audit.formalguard import require_agreement
+
+require_agreement()          # prints the protocol, requires the phrase
+```
+
+A confirmation completed in under **3 seconds** raises
+`RuntimeError("Scripting detected. Protocol reading time too short.")`.
+A successful confirmation is cached in `.sra_agreement`; later runs skip the
+prompt. With no terminal, the function raises a `RuntimeError` that names the
+way out (`--i-understand-risks`) instead of an `EOFError`.
+
+### CLI exit codes
+
+| code | meaning |
+|---|---|
+| 0 | completed |
+| 1 | data / parameter error (missing file, bad array, no arm left) |
+| 2 | protocol refused (no terminal, too fast, wrong phrase) |
+| 3 | deadlock triggered; the sandbox was rolled back |
+
+```bash
+leakage-audit --npy rec.npy --fs 500 --band 20 --rates 250 125 62.5 \
+              --strict --tolerance 0.01          # prompts, then may exit 3
+leakage-audit ... --strict --i-understand-risks  # skips the prompt, keeps the gate
+```
+
+### What strict mode is not
+
+It does not stop a script, identify a machine, restore files outside the
+sandbox, or make an extrapolation true. The host id is `uuid.getnode()`, a
+MAC-derived label (`host_id=False` disables it). The sandbox is a temporary
+directory on disk, not memory.
+
 ---
 
 ## What it will not tell you
