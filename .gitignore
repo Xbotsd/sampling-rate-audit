@@ -13,3 +13,6 @@ examples/_*.npy
 v2_demo_decay.png
 demo.png
 demo_check.png
+# Strict-mode runtime artefacts (never commit: they describe one machine)
+.sra_deadlock
+.sra_agreement
