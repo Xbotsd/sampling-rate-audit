@@ -62,6 +62,19 @@ def main():
     ap.add_argument("--rates", type=float, nargs="*", default=None)
     ap.add_argument("--out", default=None, help="output directory")
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--strict", action="store_true",
+                    help="enable deadlock protection: abort when a fitted curve "
+                         "predicts a deficit above the tolerance")
+    ap.add_argument("--tolerance", type=float, default=0.01,
+                    help="admissible paired deficit for --strict (default 0.01)")
+    ap.add_argument("--i-understand-risks", action="store_true",
+                    help="skip the protocol prompt (records an explicit "
+                         "acknowledgement); the sandbox and the guard stay on")
+    ap.add_argument("--agreement-cache", default=None,
+                    help="where to keep the protocol acknowledgement "
+                         "(default: .sra_agreement)")
+    ap.add_argument("--deadlock-file", default=None,
+                    help="where to append deadlock events (default: .sra_deadlock)")
     ap.add_argument("--version", action="version", version="leakage-audit %s" % __version__)
     a = ap.parse_args()
 
@@ -71,19 +84,39 @@ def main():
     if not a.fs:
         ap.error("--fs is required")
 
-    eng = Audit()
-    if a.dir:
-        files = sorted(f for f in os.listdir(a.dir) if f.endswith(".npy"))
-        sigs = [np.load(os.path.join(a.dir, f)).astype(float).ravel() for f in files]
-        res = eng.run_many(sigs, a.fs, band=a.band, rates=a.rates)
-        print("records:", len(sigs))
-    elif a.npy:
-        res = eng.run(np.load(a.npy).astype(float).ravel(), a.fs, band=a.band, rates=a.rates)
-    elif a.csv:
-        res = eng.run(np.loadtxt(a.csv, delimiter=",").astype(float).ravel(),
-                      a.fs, band=a.band, rates=a.rates)
-    else:
-        ap.error("need --npy, --csv or --dir (or --selftest)")
+    guard = None
+    if a.strict:
+        from .formalguard import FormalGuard, require_agreement
+
+        if not a.i_understand_risks:
+            require_agreement(cache_path=a.agreement_cache)
+        guard = FormalGuard(a.tolerance, state_path=a.deadlock_file,
+                            strict=True)
+
+    eng = Audit(formal_guard=guard, tolerance=a.tolerance if a.strict else None)
+
+    from .formalguard import DeadlockError
+
+    try:
+        if a.dir:
+            files = sorted(f for f in os.listdir(a.dir) if f.endswith(".npy"))
+            sigs = [np.load(os.path.join(a.dir, f)).astype(float).ravel() for f in files]
+            res = eng.run_many(sigs, a.fs, band=a.band, rates=a.rates)
+            print("records:", len(sigs))
+        elif a.npy:
+            res = eng.run(np.load(a.npy).astype(float).ravel(), a.fs,
+                          band=a.band, rates=a.rates)
+        elif a.csv:
+            res = eng.run(np.loadtxt(a.csv, delimiter=",").astype(float).ravel(),
+                          a.fs, band=a.band, rates=a.rates)
+        else:
+            ap.error("need --npy, --csv or --dir (or --selftest)")
+    except DeadlockError:
+        # 沙盒已经回档，库内也打印过说明。命令行这里只负责给出一个固定的非零
+        # 退出码，避免把契约异常埋进 traceback 里。程序化调用方拿到的仍然是
+        # DeadlockError 本身——库没有吞掉它。
+        print("strict mode: run aborted, exit code 3", file=sys.stderr)
+        raise SystemExit(3)
 
     print("band B = %.3f Hz   fs = %g Hz   mode = %s" % (res.band, res.fs, res.mode))
     print(res.markdown())

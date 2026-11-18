@@ -34,9 +34,13 @@ from __future__ import annotations
 
 __version__ = "2.1.1"
 
-# True only on the demo branch. Consulted by the CLI and the README so that a
-# sandbox build can never be mistaken for the audited release.
-DEMO_BUILD = True
+# The order-fitting layer is teaching material, not evidence. False means this
+# is the released line (main), which also ships strict mode; the V2.1.1-demo
+# branch carried True.
+DEMO_BUILD = False
+
+# Strict mode (formalguard) is available in this build. See the README.
+STRICT_MODE_AVAILABLE = True
 
 import csv
 import json
@@ -411,10 +415,27 @@ class Audit:
         Your admissible deficit.  Stored on the engine so that
         :class:`~leakage_audit.demoguard.DemoGuard` and
         :func:`~leakage_audit.visualizer.plot_decay` can default to it.
+
+    Strict mode (V2.1.1)
+    --------------------
+    formal_guard : FormalGuard, optional
+        When given, the run is computed inside a
+        :class:`~leakage_audit.formalguard.Sandbox` and every fitted curve is
+        checked against the guard at the lowest audited rate.  A violation
+        rolls the sandbox back and re-raises
+        :class:`~leakage_audit.formalguard.DeadlockError`.  Nothing outside the
+        sandbox is ever modified.
+    sandbox_root : path, optional
+        Where the sandbox directory is created (default: the system temp dir).
+    enforce_operating_point : bool, default True
+        Only consulted when ``formal_guard`` is set.  Set False to keep the
+        sandbox and skip the check, e.g. while exploring.
     """
 
     def __init__(self, features=None, demean=True, fit_order=True,
-                 estimator_method="nls", tolerance=None, estimator=None):
+                 estimator_method="nls", tolerance=None, estimator=None,
+                 formal_guard=None, sandbox_root=None,
+                 enforce_operating_point=True):
         self.features = features or list(REGISTRY)
         self.demean = demean
         self.fit_order = bool(fit_order)
@@ -424,6 +445,10 @@ class Audit:
         # the demo announcement (Audit(estimator="mle")) keeps working.
         if estimator is not None:
             self.estimator_method = str(estimator)
+        self.formal_guard = formal_guard
+        self.sandbox_root = sandbox_root
+        self.enforce_operating_point = bool(enforce_operating_point)
+        self.last_sandbox = None
 
     # ------------------------------------------------------------------ fit
     def _attach_fits(self, result):
@@ -521,36 +546,83 @@ class Audit:
                                  rel_bias=abs(v - ref[f]) / (abs(ref[f]) + EPS)))
         return rows
 
+    def _enforce_fits(self, result):
+        """Check every successful fit against the strict guard.
+
+        在最低的被审计速率处取值——亏空随 r 上升而下降，最低速率就是最坏点。
+        这个循环**刻意不放在任何 try/except 里**：DeadlockError 必须一路穿出
+        ``run``，不能被本模块顺手吞掉。
+        """
+        guard = self.formal_guard
+        if guard is None or not self.enforce_operating_point:
+            return
+        from .formalguard import DeadlockError
+
+        for feature in sorted(result.fits):
+            fit = result.fits[feature]
+            if fit is None or not getattr(fit, "ok", False):
+                continue
+            predicted = fit.predict(np.array([fit.r_min]))[0]
+            # 注意：这里不做 try/except。守卫抛出的 DeadlockError 必须传播。
+            guard.enforce(float(predicted), context="feature=%s r=%.4g"
+                          % (feature, fit.r_min))
+
+    def _with_sandbox(self, compute):
+        """Run ``compute`` in a sandbox; roll back and re-raise on a deadlock."""
+        if self.formal_guard is None:
+            result = compute()
+            return self._attach_fits(result) if self.fit_order else result
+
+        from .formalguard import DeadlockError, Sandbox, format_rollback_message
+
+        box = Sandbox(root=self.sandbox_root)
+        self.last_sandbox = box
+        try:
+            result = compute()
+            if self.fit_order:
+                result = self._attach_fits(result)
+                self._enforce_fits(result)
+            return result
+        except DeadlockError:
+            box.rollback()
+            print(format_rollback_message())
+            raise
+
     def run(self, x, fs, band=None, rates=None, anchor=None):
-        x, band, anchor, rates = self._prep(x, fs, band, rates, anchor)
-        result = AuditResult(rows=self._one(x, fs, band, anchor, rates),
-                             band=band, fs=fs, mode="single")
-        return self._attach_fits(result) if self.fit_order else result
+        def compute():
+            x_, band_, anchor_, rates_ = self._prep(x, fs, band, rates, anchor)
+            return AuditResult(rows=self._one(x_, fs, band_, anchor_, rates_),
+                               band=band_, fs=fs, mode="single")
+
+        return self._with_sandbox(compute)
 
     def run_many(self, signals, fs, band=None, rates=None, anchor=None):
-        sigs = [np.asarray(s, float) for s in signals]
-        _, band, anchor, rates = self._prep(sigs[0], fs, band, rates, anchor)
-        acc = {}
-        for s in sigs:
-            s = s - (s.mean() if self.demean else 0.0)
-            for r in self._one(s, fs, band, anchor, rates):
-                k = (r["feature"], r["r"])
-                acc.setdefault(k, ([], []))
-                acc[k][0].append(r["value"])
-                acc[k][1].append(r["reference"])
-        out = []
-        for (f, rr), (pos, neg) in acc.items():
-            if len(pos) < 3:
-                continue
-            mad = 1.4826 * np.median(np.abs(np.array(neg) - np.median(neg))) + EPS
-            rel = float(np.median([abs(a - b) / (abs(b) + EPS)
-                                   for a, b in zip(pos, neg)]))
-            out.append(dict(feature=f, signature=REGISTRY[f][1], source=REGISTRY[f][2],
-                            fs=rr * band, r=rr, auc=auc(pos, neg),
-                            d=float(abs(np.median(pos) - np.median(neg)) / mad),
-                            rel_bias=rel, n=len(pos)))
-        result = AuditResult(rows=out, band=band, fs=fs, mode="multi")
-        return self._attach_fits(result) if self.fit_order else result
+        def compute():
+            sigs = [np.asarray(s, float) for s in signals]
+            _, band_, anchor_, rates_ = self._prep(sigs[0], fs, band, rates, anchor)
+            acc = {}
+            for s in sigs:
+                s = s - (s.mean() if self.demean else 0.0)
+                for r in self._one(s, fs, band_, anchor_, rates_):
+                    k = (r["feature"], r["r"])
+                    acc.setdefault(k, ([], []))
+                    acc[k][0].append(r["value"])
+                    acc[k][1].append(r["reference"])
+            out = []
+            for (f, rr), (pos, neg) in acc.items():
+                if len(pos) < 3:
+                    continue
+                mad = 1.4826 * np.median(np.abs(np.array(neg) - np.median(neg))) + EPS
+                rel = float(np.median([abs(a - b) / (abs(b) + EPS)
+                                       for a, b in zip(pos, neg)]))
+                out.append(dict(feature=f, signature=REGISTRY[f][1],
+                                source=REGISTRY[f][2],
+                                fs=rr * band_, r=rr, auc=auc(pos, neg),
+                                d=float(abs(np.median(pos) - np.median(neg)) / mad),
+                                rel_bias=rel, n=len(pos)))
+            return AuditResult(rows=out, band=band_, fs=fs, mode="multi")
+
+        return self._with_sandbox(compute)
 
 
 __all__ = [

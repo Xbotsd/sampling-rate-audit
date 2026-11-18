@@ -47,7 +47,7 @@ import numpy as np
 # 允许直接从仓库根目录运行（不必先 pip install）
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from leakage_audit import Audit, DEMO_BUILD, __version__          # noqa: E402
+from leakage_audit import Audit, __version__                      # noqa: E402
 from leakage_audit.demoguard import DemoGuard                      # noqa: E402
 from leakage_audit.visualizer import plot_decay                    # noqa: E402
 
@@ -92,8 +92,8 @@ def main(argv=None):
 
     bar = "=" * 72
     print(bar)
-    print("  sampling-rate-audit  %s   (demo build: %s)" % (__version__, DEMO_BUILD))
-    print("  DEMO ONLY - no enforcement, no rollback, not for publication")
+    print("  sampling-rate-audit  %s   (order fit: descriptive, not evidence)" % __version__)
+    print("  This script runs without strict mode: the fit is descriptive only.")
     print(bar)
 
     # ---------------------------------------------------------------- signal

@@ -1,22 +1,24 @@
 # sampling-rate-audit
 
 > [!WARNING]
-> **This branch is `V2.1.1-demo`, a teaching sandbox. It is not the release.**
+> **Version 2.1.1 adds a fitted decay curve and an optional strict mode. Neither
+> turns an extrapolation into a measurement.**
 >
-> - **Not for production, not for publication, not for clinical or industrial
->   decisions.** Everything here is an outer wrapper around the audited engine
->   plus a curve fit; nothing in it has been validated.
-> - **There is no enforcement of any kind.** `DemoGuard` prints a warning and
->   returns a string. It does not block, does not raise, does not roll back,
->   does not lock anything, and does not touch your files. A green light from
->   this build means nothing.
-> - **The fitted exponent is descriptive.** `d = C·r^(−p)` is fitted to the
->   rate cells you actually audited. Outside that range it is an extrapolation,
->   and extrapolating a power law past its data is exactly the mistake this
->   package exists to warn about.
-> - **Use `main` for real work.** The audited release is `v1.0.1`, archived as
->   [doi:10.5281/zenodo.24154075](https://doi.org/10.5281/zenodo.24154075).
->   This branch is not tagged and will never be archived.
+> - **The fitted exponent is descriptive.** `d = C·r^(−p)` is fitted to the rate
+>   cells you actually audited. Outside that range it is an extrapolation, and
+>   extrapolating a power law past its data is exactly the mistake this package
+>   exists to warn about.
+> - **Strict mode raises; it does not protect.** `--strict` aborts the run and
+>   appends an event to `.sra_deadlock` when a fitted curve predicts a deficit
+>   above your tolerance. It cannot make the prediction true, and it cannot stop
+>   a script — the protocol reading-time check is a process requirement, not a
+>   security control.
+> - **Rollback means the sandbox.** A deadlock discards the temporary directory
+>   this run created. It does not and cannot undo anything you did elsewhere;
+>   nothing outside the sandbox is ever written.
+> - **The archived release is still `v1.0.1`**
+>   ([doi:10.5281/zenodo.24154075](https://doi.org/10.5281/zenodo.24154075)).
+>   Version 2.1.1 is not archived and has no DOI.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24123019.svg)](https://doi.org/10.5281/zenodo.24123019) [![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/Xbotsd/badge.svg)](https://hub.xerj.org/contributors/Xbotsd)
 
@@ -37,13 +39,13 @@ It is the reference implementation accompanying
 
 ## Status and provenance
 
-- **On `main`, the audited release is version 1.0.1**, archived as
-  doi:10.5281/zenodo.24154075. The concept doi `10.5281/zenodo.24123019` always
-  resolves to the latest archived version. The accompanying manuscript is under
-  review at Computer Methods and Programs in Biomedicine.
-- **On this branch (`V2.1.1-demo`) the package reports version 2.1.1 and
-  `DEMO_BUILD = True`.** It is a sandbox: no tag, no Zenodo record, no DOI. If
-  you arrived here from a search result, go to `main`.
+- **The audited release is version 1.0.1**, archived as doi:10.5281/zenodo.24154075.
+  The concept doi `10.5281/zenodo.24123019` always resolves to the latest archived
+  version. The accompanying manuscript is under review at Computer Methods and
+  Programs in Biomedicine.
+- **`main` now reports version 2.1.1 and `DEMO_BUILD = False`.** 2.1.1 adds the
+  order fit and strict mode on top of the unchanged 1.0.1 engine. It is not
+  tagged and not archived; 1.0.1 remains the citable artefact.
 - **Archived on Zenodo: [10.5281/zenodo.24153259](https://doi.org/10.5281/zenodo.24153259)**
   (software, MIT). That record carries two files: this package, and the per-record
   feature values, fit outputs and figures behind every table and figure of the
@@ -54,20 +56,41 @@ It is the reference implementation accompanying
   superseded by the version under review.
 - The per-record results are in the archival deposit, not in this git tree.
 
-## What the demo adds (and what it refuses to claim)
+## What 2.1.1 adds (and what it refuses to claim)
 
 | module | what it does |
 |---|---|
 | `leakage_audit/estimator.py` | fits `d = C·r^(−p)` to the paired deficits: `nls` (linear space), `mle` (log-normal, profiled σ), `huber` (robust, MAD-scaled) |
 | `leakage_audit/demoguard.py` | compares a predicted deficit with your tolerance and **prints**; returns `"SAFE"` / `"WARNING"`; never raises, never blocks, never writes |
+| `leakage_audit/formalguard.py` | strict mode: a tolerance violation appends an event to `.sra_deadlock` and raises `DeadlockError`; `require_agreement()` gates the run; `Sandbox` discards this run's temporary output on failure |
 | `leakage_audit/visualizer.py` | scatter + fitted curve + green/amber/red bands, with a marker where the audited range ends |
-| `Audit(fit_order=..., estimator_method=...)` | attaches the fits to `AuditResult.fits`; the audit rows themselves are untouched |
+| `Audit(fit_order=..., estimator_method=..., formal_guard=...)` | attaches the fits to `AuditResult.fits`; with a guard, the run is sandboxed and every fitted curve is checked at the lowest audited rate |
 
 ```bash
 pip install -e ".[demo]"                 # numpy + scipy + matplotlib
 python examples/v2_demo_tutorial.py      # end-to-end, writes v2_demo_decay.png
-pytest -q                                # 65 tests
+pytest -q                                # 97 tests
+
+# strict mode
+leakage-audit --npy rec.npy --fs 500 --band 20 --rates 250 125 62.5 \
+              --strict --tolerance 0.01
+#   ...  protocol prompt  ...
+#   or, for scripted use, --i-understand-risks (records the acknowledgement,
+#   keeps the sandbox and the guard)
 ```
+
+Strict mode exits with **code 3** when it trips, and the event file records the
+timestamp, the reason, the tolerance and a host label.
+
+### What strict mode is not
+
+| claim | reality |
+|---|---|
+| "it stops a script" | it does not. The 3-second reading check is a process requirement; a script can sleep 4 seconds. |
+| "it locks the machine" | it does not. The event file is an append-only log, not an interlock; nothing reads it back. |
+| "it rolls back your data" | it discards *this run's* sandbox. Files you wrote elsewhere are untouched, and cannot be restored by this package. |
+| "it proves the extrapolation" | it does not. A fit between r=2.5 and r=12.5 says nothing about r=1. Re-measure. |
+
 
 The exponent is a **finite-range descriptive fit**. `PowerLawFit.note` says so
 when a fit rests on two points, and `DemoGuard`'s message says so every time it

@@ -19,7 +19,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from leakage_audit import Audit, DEMO_BUILD
+from leakage_audit import Audit, DEMO_BUILD, STRICT_MODE_AVAILABLE
 from leakage_audit.demoguard import DemoGuard, SAFE, WARNING, check
 from leakage_audit.estimator import (
     PowerLawFit,
@@ -234,15 +234,17 @@ def test_demo_tutorial_runs_without_plotting(tmp_path, capsys):
     rc = module.main(["--no-plot", "--method", "nls", "--tolerance", "0.01"])
     assert rc == 0
     out = capsys.readouterr().out
-    assert "DEMO ONLY" in out
+    assert "descriptive" in out
     assert "empirical order" in out
     assert "DemoGuard:" in out
 
 
 # -------------------------------------------------------------------- demo
-def test_demo_build_flag_is_set():
-    """The branch identity must be visible from code, not only from the README."""
-    assert DEMO_BUILD is True
+def test_build_flags_describe_this_release():
+    """2.1.1 is the released line: the order fit is teaching material, and
+    strict mode ships with it. The demo branch carried DEMO_BUILD = True."""
+    assert DEMO_BUILD is False
+    assert STRICT_MODE_AVAILABLE is True
 
 
 def test_audit_attaches_fits_and_keeps_v1_behaviour():

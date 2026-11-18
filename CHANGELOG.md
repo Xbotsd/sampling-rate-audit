@@ -4,43 +4,63 @@ All notable changes to `sampling-rate-audit` are recorded here. The format follo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.1-demo] — 2026-11-17 — **branch only, never released**
+## [2.1.1] — 2026-11-18 — **main; not archived**
 
-A teaching sandbox layered on top of 1.0.1. No tag, no Zenodo record, no DOI, and not
-supported for production or publication. `main` remains the audited line.
+Adds a fitted decay curve and an optional strict mode on top of the unchanged
+1.0.1 engine. The archived, citable artefact remains **1.0.1**
+(`doi:10.5281/zenodo.24154075`); this version has no tag and no DOI.
 
-### Added
+### Added — order estimation and visualisation
 
-- `leakage_audit/estimator.py` — fits `d = C·r^(−p)` to the paired deficits with three
-  estimators: `nls` (`scipy.optimize.curve_fit`, linear space), `mle` (log-normal errors with
-  the scale profiled out, analytic gradient, L-BFGS-B) and `huber` (Huber loss, MAD-scaled and
-  fixed at the starting residual so the surface does not shift under the optimiser). Points with
-  zero, negative or non-finite deficit are dropped and counted; too few points yields
-  `ok=False` with a reason rather than an exception.
-- `leakage_audit/demoguard.py` — `DemoGuard.check_risk()` compares a predicted deficit with a
-  tolerance and prints a warning. It returns `"SAFE"` / `"WARNING"`, never raises, never blocks,
-  never writes, and touches no data.
-- `leakage_audit/visualizer.py` — `plot_decay()` draws measured points, the fitted curve, and
-  green / amber / red bands derived from where the nominated curve crosses the tolerance.
-  The audited range is marked, and everything to the right of it is labelled extrapolation.
-- `Audit(fit_order=True, estimator_method="nls", tolerance=None)` — attaches per-feature fits to
-  `AuditResult.fits`; `AuditResult.fit_markdown()` prints them; `to_json()` includes them when
-  present. `fit_order=False` reproduces 1.0.1 behaviour exactly.
-- `examples/v2_demo_tutorial.py` — end-to-end walkthrough that prints the audit table, the fitted
-  exponents, the guard's warnings, and writes a figure.
-- `pyproject.toml` extra `[demo]` = `scipy` + `matplotlib`. The core package still needs only numpy;
-  both are imported lazily, inside the functions that use them.
-- `DEMO_BUILD` flag, so the build's identity is visible from code and not only from this file.
+- `leakage_audit/estimator.py` — fits `d = C·r^(−p)` with `nls` (`curve_fit`,
+  linear space), `mle` (log-normal errors, scale profiled out, analytic gradient,
+  L-BFGS-B) and `huber` (Huber loss, MAD-scaled and fixed at the starting
+  residual). Points with zero, negative or non-finite deficit are dropped and
+  counted; too few points yields `ok=False` with a reason instead of an exception.
+- `leakage_audit/visualizer.py` — `plot_decay()`: measured points, fitted curve,
+  and green / amber / red bands derived from where the nominated curve crosses the
+  tolerance; the audited range is marked and everything right of it is labelled
+  extrapolation.
+- `Audit(fit_order=..., estimator_method=...)` attaches per-feature fits to
+  `AuditResult.fits`; `fit_markdown()` prints them and `to_json()` includes them.
+  `fit_order=False` reproduces 1.0.1 behaviour exactly.
+- `examples/v2_demo_tutorial.py` — end-to-end walkthrough.
 
-### Unchanged
+### Added — strict mode
 
-- The audit itself. `AuditResult.rows`, `markdown()`, `exponents()`, the CSV columns, the registry,
-  the CLI and the agent are byte-for-byte the 1.0.1 behaviour; the demo only adds `fits`.
+- `leakage_audit/formalguard.py`:
+  - `FormalGuard` classifies a predicted deficit and, when `strict`, appends an
+    event to `.sra_deadlock` and raises `DeadlockError` (a `RuntimeError` whose
+    message is exactly `SRA_DEADLOCK_PROTECTION_TRIGGERED`). Negative, non-finite
+    and non-numeric values count as the highest risk. A file write failure never
+    turns into a pass.
+  - `require_agreement()` prints the protocol, requires the phrase to be typed,
+    and raises `RuntimeError(Scripting detected. Protocol reading time too short.)`
+    when the exchange takes under 3 s. The cache `.sra_agreement` skips later
+    prompts; the clock is injectable so tests do not sleep.
+  - `Sandbox` is a temporary directory that is destroyed on failure; `Audit`
+    computes inside it and rolls it back before re-raising.
+- CLI: `--strict`, `--tolerance`, `--i-understand-risks`, `--agreement-cache`,
+  `--deadlock-file`. A tripped deadlock exits with code 3.
+
+### Changed
+
+- `DEMO_BUILD` is now `False` on this line (it was `True` on `V2.1.1-demo`);
+  `STRICT_MODE_AVAILABLE` is `True`.
+- `Audit.run`/`run_many` route through a sandbox when a `formal_guard` is given.
 
 ### Explicitly not provided
 
-- Any enforcement. There is no interception, no deadlock, no rollback, no sandbox, no locking.
-  The guard prints. That is the whole contract.
+- No enforcement that cannot be bypassed: the event file is a log, not an
+  interlock; the reading-time check cannot detect a script; nothing identifies a
+  machine (the host id is a MAC-derived label, and can be omitted).
+- No rollback of anything outside the sandbox. Nothing outside the sandbox is
+  ever written.
+
+### Unchanged
+
+- The audit itself: `AuditResult.rows`, `markdown()`, `exponents()`, the CSV
+  columns, the registry and the agent are the 1.0.1 behaviour.
 
 ## [1.0.1] — 2026-11-12
 

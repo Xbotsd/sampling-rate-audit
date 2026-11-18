@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sampling-rate-audit"
 version = "2.1.1"
-description = "DEMO build (V2.1.1-demo): paired sampling-grid audit with a teaching-only order estimator. Not for production or publication."
+description = "Paired sampling-grid audit with a descriptive decay fit and an optional strict mode. The archived release is 1.0.1."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
