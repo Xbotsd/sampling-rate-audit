@@ -16,3 +16,5 @@ demo_check.png
 # Strict-mode runtime artefacts (never commit: they describe one machine)
 .sra_deadlock
 .sra_agreement
+examples/out/
+*.sra_sandbox*

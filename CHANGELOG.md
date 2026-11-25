@@ -4,6 +4,49 @@ All notable changes to `sampling-rate-audit` are recorded here. The format follo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.1] — 2026-11-25
+
+The optimiser layer, merged onto the 2.1.x guard rather than beside it.
+
+The engine's arithmetic is unchanged: same eighteen definitions, same `--selftest` table.
+What is new is the ability to ask which grid to build, and to refuse when the answer is not
+measured.
+
+### Added
+
+- `sra_opt`, an optional companion package:
+  - `oracle` — per-record feature values on synthetic records, billed per point and cached per
+    ratio, so the cost of an audit is a number rather than an adjective;
+  - `surrogate` — PCHIP, polynomial and random-forest fits of the deficit curve, an
+    extrapolation gate that ignores fit quality beyond 2x, and a signed risk agreement for
+    callers who lower the threshold;
+  - `pareto` — predict-then-verify search for the cheapest `(anchor, rate)` pair that meets a
+    tolerance, returning a certificate labelled *measured*, *interpolated* or *extrapolated*,
+    and a `ValueChoice` instead of a verdict when the cheap and defensible answers differ;
+  - `arbitrator` — logistic track selection plus an OLS combination, with `CrossTrackReader`
+    for verifying a foreign result before merging it;
+  - `deadlock` — the export gate. Dirty inputs and unbacked exports exit 3; exploration rolls
+    back. Built on `leakage_audit.formalguard`, so there is one exception class, one trace
+    file and one JSON schema rather than two of each;
+  - `budget` — a 15 % reserve the search cannot spend, and two later sinks for it;
+  - `visualizer_v3` — `.sra_bug_report`, a defect heatmap and a leave-one-out sensitivity chart.
+- Console scripts `sra-opt` and `sra-opt-dp`.
+- `[opt]` and `[dev]` extras. `numpy` remains the only dependency of the engine.
+- 35 tests for the new layer, including a subprocess check of the exit-code contract.
+
+### Changed
+
+- Version to 3.1.1 across `pyproject.toml`, `leakage_audit.__version__`, `CITATION.cff` and
+  `.zenodo.json`.
+
+### Notes
+
+- `import sra_opt` works without the `opt` extra; only the figure drawing needs Pillow.
+- The arbitration model ships with nine training cases. That is enough to expose a
+  disagreement between the two tracks and not enough to settle it, and the module says so.
+- The optimiser's trace lines extend `formalguard`'s schema with `phase`, `machine` and
+  `detail`; every field the existing guard writes is still written unchanged.
+
 ## [2.1.2] — 2026-11-18 — **Formal Guard Edition**
 
 Adds a fitted decay curve and strict mode on top of the unchanged 1.0.1 engine.

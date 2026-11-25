@@ -5,7 +5,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite the article below. The archived software record is 1.0.1 (concept DOI 10.5281/zenodo.24123019); 2.1.2 is not archived."
 title: "sampling-rate-audit"
-version: 2.1.2
+version: 3.1.1
 # Concept DOI: always resolves to the latest archived version.
 doi: 10.5281/zenodo.24123019
 date-released: 2026-11-18

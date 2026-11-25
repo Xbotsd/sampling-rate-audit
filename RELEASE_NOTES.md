@@ -1,3 +1,28 @@
+## What's new in v3.1.1
+
+An optional search layer. The measurement engine is untouched.
+
+- **Ask which grid to build.** `sra_opt.pareto.search()` takes a tolerance and a cost model and
+  returns the cheapest `(anchor, rate)` pair that meets the tolerance, with the evidence behind
+  it. On the demo it lands on `r = 7.0` with an anchor at 25 for `hjorth_mobility_Hz` at a 2 %
+  tolerance, for 39 % of the compute a defensive sweep costs.
+- **Refuse when the answer is not measured.** Certificates are labelled *measured*,
+  *interpolated* or *extrapolated*. A cheapest-feasible answer resting on extrapolation comes
+  back as a `ValueChoice` with three priced options, not as a verdict.
+- **Deadlock Protection as an export gate.** Dirty inputs and attempts to emit an unbacked
+  certificate exit 3 and append to `.sra_deadlock`; exploration inside a search rolls back
+  silently. Built on `formalguard`, so the exception class and trace schema are shared.
+- **A surrogate that does not trust itself.** A five-point fit scoring a leave-one-out R2 of
+  0.99996 was still wrong by 4x four octaves out, so the gate refuses extrapolation beyond 2x
+  regardless of fit quality.
+
+Install with `pip install "sampling-rate-audit[opt]"`; plain `pip install sampling-rate-audit`
+still gives the engine with numpy as its only dependency.
+
+Two limits the demo reports rather than hides: the expensive track was closer in only 2 of 9
+cases, and the arbitration model has nine training cases, so it exposes disagreement and does
+not settle it.
+
 ## What's new in v1.0.1
 
 Citation metadata only; there is no code change.

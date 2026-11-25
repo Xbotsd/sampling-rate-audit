@@ -1,8 +1,11 @@
 # sampling-rate-audit
 
 > [!WARNING]
-> **Version 2.1.2 adds a fitted decay curve and an optional strict mode. Neither
-> turns an extrapolation into a measurement.**
+> **Version 3.1 adds an optional search layer. It does not turn a prediction
+> into a measurement.**
+>
+> - **2.1.2 added a fitted decay curve and an optional strict mode. Neither
+>   turns an extrapolation into a measurement.**
 >
 > - **The fitted exponent is descriptive.** `d = C·r^(−p)` is fitted to the rate
 >   cells you actually audited. Outside that range it is an extrapolation, and
@@ -115,12 +118,58 @@ actually audited.
 
 From 1.0.0 the public surface — `Audit`, `AuditResult`, `REGISTRY`, `ORDER_OF`,
 `resample_fft`, `guess_signature` and the `leakage-audit` / `invariance-agent`
-entry points — follows semantic versioning: breaking changes bump the major,
+entry points, and from 3.1.1 the `sra_opt` package and the `sra-opt` / `sra-opt-dp`
+scripts — follow semantic versioning: breaking changes bump the major,
 new behaviour bumps the minor, fixes bump the patch. The signature labels
 returned by the engine are heuristic structural warnings, not invariance
 orders; an order is measured, not read off a formula.
 
 ---
+
+## Optimiser layer (3.1)
+
+The audit answers *how much a definition moves when the grid changes*. The optimiser answers
+the question a designer actually has: *which grid should I build*, given a tolerance and a
+price per sample. It is an optional extra and it never replaces the audit's own verdicts.
+
+```python
+from sra_opt import Oracle, CostModel
+from sra_opt.pareto import search
+
+oracle = Oracle(["hjorth_mobility_Hz"], n_records=6, seed=7)
+report = search(oracle, "hjorth_mobility_Hz", tau=0.02,
+                cost=CostModel(fixed=1.0, per_unit_rate=1.0), budget_units=400)
+print(report.verdict())
+# a=25, r*=7.0 (device cost 8.0) certifies tau=0.02 from 7 measured ratios;
+# 39% of the defensive sweep's compute
+```
+
+```bash
+sra-opt search --feature hjorth_mobility_Hz --tau 0.02 --budget 400
+sra-opt-dp --feature hjorth_mobility_Hz --tau 0.02 --export   # exit 0
+sra-opt-dp --tau -1                                           # exit 3
+```
+
+| module | what it does | the part that keeps it honest |
+|---|---|---|
+| `sra_opt.surrogate` | fits the deficit curve on a five-point pilot | refuses any extrapolation beyond 2x whatever the fit quality; lowering the acceptance threshold writes a signed risk agreement instead of passing silently |
+| `sra_opt.pareto` | predicts the crossing, measures it, returns a certificate | every ratio is labelled *measured*, *interpolated* or *extrapolated*; when the cheapest passing grid is not measured it returns a `ValueChoice` instead of a verdict |
+| `sra_opt.deadlock` | the export gate, built on `formalguard` | dirty inputs and unbacked exports exit 3; exploration inside a search rolls back and is not a violation |
+| `sra_opt.arbitrator` | reconciles the cheap and expensive tracks, and reads a foreign result | nine training cases, so it exposes disagreement and does not settle it, and says so |
+| `sra_opt.visualizer_v3` | `.sra_bug_report`, defect heatmap, leave-one-out sensitivity | figures need the `opt` extra; the report replays byte for byte |
+
+Two results from the demo, because they are not what the design expected:
+
+* **the expensive track is not automatically the better one.** A fourteen-point sweep spent
+  half its budget where the deficit had already died into noise, so its "first ratio that meets
+  the tolerance" was biased low; the cheap five-point prediction was closer in 7 of 9 cases.
+* **the surrogate gate earned its place.** A five-point PCHIP fit scored a leave-one-out R2 of
+  0.99996 and was still wrong by 4x four octaves out. Fit quality alone would have passed it;
+  the extrapolation rule refused it.
+
+The optimiser inherits every limitation of the audit: it measures the digital-grid component
+only, its anchor is an interpolation rather than continuous-time truth, and a certificate says
+`measured` only when the ratio behind it was actually paid for.
 
 ## Invariance agent (new)
 
